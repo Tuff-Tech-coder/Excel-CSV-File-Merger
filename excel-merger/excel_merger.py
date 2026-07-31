@@ -91,11 +91,43 @@ def normalize_column_name(col: str) -> str:
     return COLUMN_ALIASES.get(cleaned, cleaned)
 
 
+def dedupe_columns(cols: list[str], source_filename: str) -> list[str]:
+    """
+    Ensure canonical column names are unique within a single file.
+
+    Multiple source headers can alias to the same canonical name (e.g. both
+    "Amount" and "Total" map to "revenue"). Left unhandled, pandas produces two
+    identically-named columns, `df["revenue"]` returns a DataFrame instead of a
+    Series, and every downstream scalar operation raises
+    "The truth value of a Series is ambiguous".
+    """
+    seen: dict[str, int] = {}
+    out: list[str] = []
+    for c in cols:
+        if c in seen:
+            seen[c] += 1
+            renamed = f"{c}_{seen[c]}"
+            logger.warning(
+                f"{source_filename}: duplicate canonical column '{c}' renamed to "
+                f"'{renamed}'. Review COLUMN_ALIASES if these should be merged."
+            )
+            out.append(renamed)
+        else:
+            seen[c] = 1
+            out.append(c)
+    return out
+
+
 def normalize_currency(value) -> float | None:
     """
     Convert currency strings like '$5,400.00' or '5400' to float.
     Returns None if conversion is not possible.
     """
+    if isinstance(value, (pd.Series, pd.DataFrame)):
+        raise TypeError(
+            "normalize_currency expects a scalar. Receiving a Series means the "
+            "DataFrame has duplicate column names -- run dedupe_columns() first."
+        )
     if pd.isna(value):
         return None
     raw = str(value).strip()
@@ -153,7 +185,9 @@ def normalize_dataframe(df: pd.DataFrame, source_filename: str) -> pd.DataFrame:
     5. Add source_file column
     """
     # --- 1. Normalize column names ---
-    df.columns = [normalize_column_name(c) for c in df.columns]
+    df.columns = dedupe_columns(
+        [normalize_column_name(c) for c in df.columns], source_filename
+    )
 
     # --- 2. Strip whitespace from all string cells ---
     df = df.map(clean_string)
