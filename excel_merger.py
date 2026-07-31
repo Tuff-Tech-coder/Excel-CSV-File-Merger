@@ -22,14 +22,13 @@ Features:
     - Outputs a formatted Excel file with statistics summary sheet
 """
 
-import re
-import logging
 import argparse
+import logging
+import re
 from pathlib import Path
 
 import pandas as pd
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment, Font, PatternFill
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -306,11 +305,7 @@ def _format_sheet(ws, df: pd.DataFrame) -> None:
     """Apply header styling and auto-fit columns to a worksheet."""
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1A3A5C", end_color="1A3A5C", fill_type="solid")
-    thin_border = Border(
-        bottom=Side(border_style="thin", color="CCCCCC")
-    )
-
-    for col_idx, cell in enumerate(ws[1], start=1):
+    for cell in ws[1]:
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal="center", wrap_text=True)
