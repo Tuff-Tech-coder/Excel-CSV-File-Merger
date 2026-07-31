@@ -1,8 +1,9 @@
 # Excel & CSV File Merger
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
-![pandas](https://img.shields.io/badge/pandas-2.x-150458?logo=pandas&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-3.x-150458?logo=pandas&logoColor=white)
 ![openpyxl](https://img.shields.io/badge/openpyxl-3.x-1D6F42)
+![Tests](https://img.shields.io/badge/tests-26%20passing-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 A data-normalization pipeline that scans a folder for Excel and CSV files and intelligently merges them into a single, clean master workbook. Built specifically for the **messy reality** of business data: mismatched column orders, inconsistent naming, currency stored as text, stray whitespace, blank rows, and duplicates.
@@ -37,11 +38,11 @@ Combining spreadsheets from different teams by hand is slow and error-prone — 
 ## Project structure
 
 ```
-excel-merger/
 ├── excel_merger.py        # Main script
 ├── create_samples.py      # Generates the demo input files
 ├── requirements.txt       # Python dependencies
-├── merged_master.xlsx     # Sample output
+├── tests/                 # 26 unit tests
+├── merged_master.xlsx     # Generated: merged output (gitignored)
 ├── merger.log             # Generated: application log
 └── sample_input/
     ├── sales_q1.xlsx          # Standard sales data
@@ -87,9 +88,67 @@ python excel_merger.py --input /path/to/folder --no-dedup
 
 ---
 
-## Customizing
+## Customizing: the `COLUMN_ALIASES` extension point
 
-Extend the `COLUMN_ALIASES` dictionary in `excel_merger.py` to teach the merger any new column-name variants you encounter — no other code changes needed.
+This is the most reusable idea in the repo. `COLUMN_ALIASES` is a single
+dictionary mapping every known source header onto a canonical name:
+
+```python
+COLUMN_ALIASES: dict[str, str] = {
+    "full name":     "name",
+    "employee name": "name",
+    "sales amount":  "revenue",
+    "amount":        "revenue",
+    "salary":        "revenue",
+    "territory":     "region",
+    ...
+}
+```
+
+Teaching the merger a new file format is **one line in this dict** — no other
+code changes. Everything downstream (currency normalization, deduplication,
+column alignment, the summary sheet) keys off canonical names, so the entire
+pipeline picks up the new variant automatically. Schema drift becomes
+configuration rather than a code change.
+
+### Two caveats worth knowing
+
+**Aliasing can collide.** Several headers intentionally map to the same
+canonical name — `Amount`, `Total` and `Salary` all become `revenue`. If a
+*single file* contains two of them, they cannot both be `revenue`. `dedupe_columns()`
+renames the second to `revenue_2` and logs a warning naming the file:
+
+```
+marketing_leads.csv: duplicate canonical column 'revenue' renamed to 'revenue_2'.
+Review COLUMN_ALIASES if these should be merged.
+```
+
+Nothing is silently dropped, and nothing crashes — you get both columns plus a
+prompt to decide whether that mapping was right for your data. Note that only
+the canonical `revenue` column gets currency normalization; `revenue_2` is left
+as-is precisely because the tool should not guess which one you meant.
+
+**`"first name" → "name"` is lossy.** If a file has separate `First Name` and
+`Last Name` columns, only the first is mapped to `name` and the surname stays
+under its own column. That is a deliberate simplification, not a bug — but if
+your data splits names that way, either remove that alias or pre-join the two
+columns before merging.
+
+---
+
+## Development
+
+```bash
+pip install -r requirements.txt
+pip install pytest ruff
+
+pytest -q          # 26 tests
+ruff check .
+```
+
+The suite covers alias normalization, currency parsing, whitespace cleaning,
+deduplication and source-file tagging, including a regression test for the
+alias-collision crash described above.
 
 ---
 
