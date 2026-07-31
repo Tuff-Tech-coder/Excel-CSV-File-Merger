@@ -1,6 +1,8 @@
 """Creates 5 deliberately messy sample input files for the Excel Merger demo."""
-import pandas as pd
+import csv
 from pathlib import Path
+
+import pandas as pd
 
 OUT = Path(__file__).parent / "sample_input"
 
@@ -47,7 +49,6 @@ df3.to_csv(OUT / "hr_employees.csv", index=False)
 
 # ── File 4: marketing_leads.csv ───────────────────────────────────────────
 # CSV with inconsistent formatting: extra whitespace, mixed number formats
-import csv
 rows = [
     ["  Name  ", "Email", "Revenue", " Region ", "Date", "Department"],
     ["Sam Turner ", "sam@leads.com", "$5,400.00", "  North  ", "2024/01/08", "Marketing"],
