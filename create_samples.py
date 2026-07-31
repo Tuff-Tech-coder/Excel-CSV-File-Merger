@@ -74,4 +74,4 @@ df5 = pd.DataFrame({
 })
 df5.to_excel(OUT / "ops_data.xlsx", index=False)
 
-print("✓ Created 5 sample input files in sample_input/")
+print("[OK] Created 5 sample input files in sample_input/")

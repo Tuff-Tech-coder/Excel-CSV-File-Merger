@@ -36,7 +36,12 @@ from openpyxl.styles import Alignment, Font, PatternFill
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("merger.log")],
+    # Input files are arbitrary user data, so the log is explicitly utf-8
+    # rather than the platform default (cp1252 on Windows).
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("merger.log", encoding="utf-8"),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -269,7 +274,7 @@ def merge_files(
     # --- Write output ---
     write_excel(merged, output_path, load_stats, dupes_removed)
     logger.info(f"Merge complete: {len(merged)} rows written to {output_path}")
-    print(f"\n✓ Merged {len(found_files)} files → {len(merged)} rows → {output_path}")
+    print(f"\n[OK] Merged {len(found_files)} files -> {len(merged)} rows -> {output_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +310,7 @@ def _format_sheet(ws, df: pd.DataFrame) -> None:
     """Apply header styling and auto-fit columns to a worksheet."""
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1A3A5C", end_color="1A3A5C", fill_type="solid")
+
     for cell in ws[1]:
         cell.font = header_font
         cell.fill = header_fill
