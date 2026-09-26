@@ -1,0 +1,8 @@
+2026-09-26 09:38:40,994 [INFO] Found 5 file(s) to merge: ['hr_employees.csv', 'marketing_leads.csv', 'ops_data.xlsx', 'sales_q1.xlsx', 'sales_q2.xlsx']
+2026-09-26 09:38:40,995 [INFO] Loaded hr_employees.csv: 7 rows, 6 columns
+2026-09-26 09:38:40,999 [INFO] Loaded marketing_leads.csv: 6 rows, 6 columns
+2026-09-26 09:38:41,004 [INFO] Loaded ops_data.xlsx: 5 rows, 6 columns
+2026-09-26 09:38:41,008 [INFO] Loaded sales_q1.xlsx: 5 rows, 6 columns
+2026-09-26 09:38:41,013 [INFO] Loaded sales_q2.xlsx: 6 rows, 7 columns
+2026-09-26 09:38:41,015 [INFO] Combined total: 28 rows
+2026-09-26 09:38:41,039 [INFO] Merge complete: 28 rows written to C:\Users\Dan\Documents\Codex\2026-09-26\cou\work\final-smoke\merged.xlsx
