@@ -3,155 +3,148 @@
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-3.x-150458?logo=pandas&logoColor=white)
 ![openpyxl](https://img.shields.io/badge/openpyxl-3.x-1D6F42)
-![Tests](https://img.shields.io/badge/tests-26%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-A data-normalization pipeline that scans a folder for Excel and CSV files and intelligently merges them into a single, clean master workbook. Built specifically for the **messy reality** of business data: mismatched column orders, inconsistent naming, currency stored as text, stray whitespace, blank rows, and duplicates.
+A defensive data-normalization pipeline that recursively discovers Excel and CSV exports, aligns their schemas, and vertically concatenates them into a reviewable two-sheet workbook.
 
----
+The project is designed for real business exports: column aliases, reordered fields, currency stored as text, mixed date formats, empty rows, exact duplicates, nested folders, source lineage, and partially unreadable batches.
 
-## Why it's useful
+## Demonstrated result
 
-Combining spreadsheets from different teams by hand is slow and error-prone — column names never match, totals are formatted as `"$5,400.00"`, and duplicates creep in. This tool encodes those fixes once and applies them consistently, turning a pile of inconsistent files into one analysis-ready dataset with an audit trail.
+The included five-file fixture produces a deterministic audit trail:
 
----
+- 5 source files discovered and processed
+- 29 source rows loaded
+- 1 blank row removed
+- 1 exact duplicate removed
+- 27 normalized rows written
+- `Merge Summary` and `Merged Data` worksheets
 
-## Features
+`Salary` remains separate from `Revenue`, and `Hire Date` remains separate from transaction `Date`; unrelated business concepts are never combined merely because they share a numeric or date type.
 
-- **Auto-discovery** of every `.xlsx`, `.xls`, and `.csv` file in a folder.
-- **Column-alias mapping** — a configurable dictionary unifies variants (`"Sales Amount"`, `"Amount"`, `"Salary"` → `revenue`; `"Territory"` → `region`) so files merge on meaning, not exact spelling.
-- **Currency normalization** — `"$5,400.00"` becomes `5400.0` for real math.
-- **Cleanup pass** — strips cell whitespace and drops entirely empty rows.
-- **Graceful column alignment** — files missing columns still merge cleanly, with gaps filled rather than erroring.
-- **Configurable deduplication** of identical rows (`--no-dedup` to disable).
-- **Source tracking** — a `source_file` column records each row's origin.
-- **Polished two-sheet output** — a formatted *Merged Data* sheet (styled header, alternating row shading, auto-fit columns) plus a *Merge Summary* sheet with per-file counts, duplicates removed, and final totals.
+## What it handles
 
----
+- Recursive, case-insensitive discovery of `.xlsx`, `.xls`, and `.csv` files.
+- Deterministic source ordering and relative-path lineage in `source_file`.
+- Configurable column aliases such as `Sales Amount` → `revenue` and `Territory` → `region`.
+- Collision-safe headers, including preservation of a user-supplied `source_file` field.
+- Strict money parsing with support for symbols, thousands separators, negatives, and accounting parentheses.
+- Typed Excel date cells for recognized date columns while preserving unrecognized source text.
+- Leading-zero CSV identifiers such as `00123` without automatic numeric coercion.
+- Empty-row cleanup after whitespace trimming.
+- Optional exact-row deduplication that excludes only the generated lineage field.
+- Formula-injection protection for untrusted headers and cell text.
+- Formula cells from `.xlsx` inputs preserved as inert text instead of disappearing or executing.
+- Atomic output replacement, rotating logs, structured JSON run summaries, and explicit partial-run status.
 
-## Tech stack
+## Output workbook
 
-`Python` · `pandas` · `openpyxl` · `xlrd` · `argparse` · `logging` · `regex`
+`Merge Summary` is the first worksheet and shows the main run metrics plus a source-by-source audit table. `Merged Data` contains the normalized records with:
 
----
+- an Excel table and filters;
+- a frozen header row;
+- typed currency and date formatting;
+- bounded, readable column widths; and
+- source lineage as the final column.
 
-## Project structure
-
-```
-├── excel_merger.py        # Main script
-├── create_samples.py      # Generates the demo input files
-├── requirements.txt       # Python dependencies
-├── tests/                 # 26 unit tests
-├── merged_master.xlsx     # Generated: merged output (gitignored)
-├── merger.log             # Generated: application log
-└── sample_input/
-    ├── sales_q1.xlsx          # Standard sales data
-    ├── sales_q2.xlsx          # Different column order + extra column + a duplicate
-    ├── hr_employees.csv       # Missing columns, different naming
-    ├── marketing_leads.csv    # Currency-as-text, whitespace, varied date formats
-    └── ops_data.xlsx          # Renamed columns + blank rows
-```
-
----
+The output must be outside the input folder. This prevents a source workbook from being overwritten and prevents previous output from being ingested on a later run.
 
 ## Setup
 
-```bash
-python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
+Run these commands from the project root.
+
+PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
----
+macOS or Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## Usage
 
-```bash
-# Merge the included sample files
-python excel_merger.py --input ./sample_input --output merged_master.xlsx
+Merge the included sample files and save both workbook and JSON audit artifacts:
 
-# Merge your own folder, keep duplicates
-python excel_merger.py --input /path/to/folder --no-dedup
+```bash
+python excel_merger.py \
+  --input ./sample_input \
+  --output ./merged_master.xlsx \
+  --json-out ./merge_run.json
 ```
 
-**Options:** `--input` · `--output` · `--no-dedup`
+PowerShell uses the same options on one line:
 
----
+```powershell
+python excel_merger.py --input .\sample_input --output .\merged_master.xlsx --json-out .\merge_run.json
+```
 
-## How it works
+Options:
 
-1. Discovers all supported files in the input folder.
-2. Loads each, normalizes column names through the alias map, cleans cells, normalizes currency, drops empty rows, and tags rows with their source file.
-3. Concatenates everything (pandas aligns on column name, filling gaps).
-4. Optionally deduplicates on all columns except the source tag.
-5. Writes a formatted workbook with both the merged data and a summary sheet.
+- `--input`: source folder; nested folders are included.
+- `--output`: destination `.xlsx` file outside the input folder.
+- `--json-out`: optional machine-readable run summary.
+- `--no-dedup`: keep exact duplicate rows.
+- `--strict`: abort if any discovered input cannot be read.
+- `--overwrite`: explicitly replace an existing destination workbook.
 
----
+Without `--strict`, readable files still produce a workbook when another input fails. The run is marked `partial`, every skipped relative path is listed in the JSON summary, and the CLI exits with status `2` rather than reporting full success.
 
-## Customizing: the `COLUMN_ALIASES` extension point
+## How normalization works
 
-This is the most reusable idea in the repo. `COLUMN_ALIASES` is a single
-dictionary mapping every known source header onto a canonical name:
+1. Discover supported files recursively and reject an output path inside the source tree.
+2. Read CSV fields as text to preserve identifiers; read `.xlsx` formulas without executing them.
+3. Normalize and de-duplicate headers, trim text, remove blank rows, and type only known money/date fields.
+4. Neutralize formula-like text and add relative source lineage.
+5. Align columns and concatenate the normalized frames.
+6. Optionally remove exact duplicates across all business columns.
+7. Write the workbook to a temporary file and atomically replace the destination only after export succeeds.
+
+This is vertical concatenation, not a relational join. Records are stacked after schema alignment; the tool does not match rows by a business key.
+
+## Customizing aliases
+
+`COLUMN_ALIASES` is the main extension point:
 
 ```python
 COLUMN_ALIASES: dict[str, str] = {
-    "full name":     "name",
-    "employee name": "name",
-    "sales amount":  "revenue",
-    "amount":        "revenue",
-    "salary":        "revenue",
-    "territory":     "region",
-    ...
+    "full name": "name",
+    "contact email": "email",
+    "sales amount": "revenue",
+    "territory": "region",
+    "transaction date": "date",
+    "hire date": "hire_date",
+    "salary": "salary",
 }
 ```
 
-Teaching the merger a new file format is **one line in this dict** — no other
-code changes. Everything downstream (currency normalization, deduplication,
-column alignment, the summary sheet) keys off canonical names, so the entire
-pipeline picks up the new variant automatically. Schema drift becomes
-configuration rather than a code change.
-
-### Two caveats worth knowing
-
-**Aliasing can collide.** Several headers intentionally map to the same
-canonical name — `Amount`, `Total` and `Salary` all become `revenue`. If a
-*single file* contains two of them, they cannot both be `revenue`. `dedupe_columns()`
-renames the second to `revenue_2` and logs a warning naming the file:
-
-```
-marketing_leads.csv: duplicate canonical column 'revenue' renamed to 'revenue_2'.
-Review COLUMN_ALIASES if these should be merged.
-```
-
-Nothing is silently dropped, and nothing crashes — you get both columns plus a
-prompt to decide whether that mapping was right for your data. Note that only
-the canonical `revenue` column gets currency normalization; `revenue_2` is left
-as-is precisely because the tool should not guess which one you meant.
-
-**`"first name" → "name"` is lossy.** If a file has separate `First Name` and
-`Last Name` columns, only the first is mapped to `name` and the surname stays
-under its own column. That is a deliberate simplification, not a bug — but if
-your data splits names that way, either remove that alias or pre-join the two
-columns before merging.
-
----
+When two source headers map to the same canonical name, the second receives a deterministic suffix such as `revenue_2`; no column is silently discarded.
 
 ## Development
 
 ```bash
 pip install -r requirements.txt
 pip install pytest ruff
-
-pytest -q          # 26 tests
+pytest -q          # 64 tests
 ruff check .
 ```
 
-The suite covers alias normalization, currency parsing, whitespace cleaning,
-deduplication and source-file tagging, including a regression test for the
-alias-collision crash described above.
+The regression suite covers parsing, schema collisions, whitespace-only rows, source lineage, recursive discovery, identifier preservation, formula safety, output-path protection, partial and strict modes, workbook formatting, atomic overwrite behavior, JSON summaries, and the complete five-file demonstration.
 
----
+## Current scope
 
-## Possible extensions
+- Each `.xlsx` file contributes its active worksheet; legacy `.xls` files contribute their first worksheet.
+- The tool recognizes four configured money/date column names (`revenue`, `salary`, `date`, and `hire_date`); additional typed fields should be added deliberately.
+- Deduplication removes only exact normalized-row matches. Business-key matching belongs in a separate join/reconciliation workflow.
 
-Add per-column type coercion, configurable merge keys for true joins (not just concatenation), a dry-run preview, or output to Parquet/SQL for larger datasets.
+## License
+
+MIT — see [LICENSE](LICENSE).

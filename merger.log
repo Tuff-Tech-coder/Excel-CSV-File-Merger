@@ -1,0 +1,27 @@
+2026-09-27 10:46:15,217 [INFO] Found 5 file(s) to merge: ['hr_employees.csv', 'marketing_leads.csv', 'ops_data.xlsx', 'sales_q1.xlsx', 'sales_q2.xlsx']
+2026-09-27 10:46:15,220 [INFO] Loaded hr_employees.csv: 7 rows, 6 columns
+2026-09-27 10:46:15,224 [INFO] Loaded marketing_leads.csv: 6 rows, 6 columns
+2026-09-27 10:46:15,237 [INFO] Loaded ops_data.xlsx: 5 rows, 6 columns
+2026-09-27 10:46:15,248 [INFO] Loaded sales_q1.xlsx: 5 rows, 6 columns
+2026-09-27 10:46:15,258 [INFO] Loaded sales_q2.xlsx: 6 rows, 7 columns
+2026-09-27 10:46:15,263 [INFO] Combined total: 28 rows
+2026-09-27 10:46:15,264 [INFO] Removed 1 duplicate row(s)
+2026-09-27 10:46:15,298 [INFO] Merge complete: 5 file(s), 27 rows written to C:\Users\Dan\Documents\Codex\2026-09-26\cou\outputs\excel_csv_merger\merged_portfolio_demo.xlsx
+2026-09-27 10:47:25,332 [INFO] Found 5 file(s) to merge: ['hr_employees.csv', 'marketing_leads.csv', 'ops_data.xlsx', 'sales_q1.xlsx', 'sales_q2.xlsx']
+2026-09-27 10:47:25,342 [INFO] Loaded hr_employees.csv: 7 rows, 6 columns
+2026-09-27 10:47:25,355 [INFO] Loaded marketing_leads.csv: 6 rows, 6 columns
+2026-09-27 10:47:25,364 [INFO] Loaded ops_data.xlsx: 5 rows, 6 columns
+2026-09-27 10:47:25,372 [INFO] Loaded sales_q1.xlsx: 5 rows, 6 columns
+2026-09-27 10:47:25,377 [INFO] Loaded sales_q2.xlsx: 6 rows, 7 columns
+2026-09-27 10:47:25,382 [INFO] Combined total: 28 rows
+2026-09-27 10:47:25,385 [INFO] Removed 1 duplicate row(s)
+2026-09-27 10:47:25,428 [INFO] Merge complete: 5 file(s), 27 rows written to C:\Users\Dan\Documents\Codex\2026-09-26\cou\outputs\excel_csv_merger\merged_portfolio_demo.xlsx
+2026-09-27 10:53:08,770 [INFO] Found 5 file(s) to merge: ['hr_employees.csv', 'marketing_leads.csv', 'ops_data.xlsx', 'sales_q1.xlsx', 'sales_q2.xlsx']
+2026-09-27 10:53:08,771 [INFO] Loaded hr_employees.csv: 7 rows, 6 columns
+2026-09-27 10:53:08,775 [INFO] Loaded marketing_leads.csv: 6 rows, 6 columns
+2026-09-27 10:53:08,781 [INFO] Loaded ops_data.xlsx: 5 rows, 6 columns
+2026-09-27 10:53:08,786 [INFO] Loaded sales_q1.xlsx: 5 rows, 6 columns
+2026-09-27 10:53:08,791 [INFO] Loaded sales_q2.xlsx: 6 rows, 7 columns
+2026-09-27 10:53:08,793 [INFO] Combined total: 28 rows
+2026-09-27 10:53:08,794 [INFO] Removed 1 duplicate row(s)
+2026-09-27 10:53:08,830 [INFO] Merge complete: 5 file(s), 27 rows written to C:\Users\Dan\Documents\Codex\2026-09-26\cou\outputs\excel_csv_merger\merged_portfolio_demo.xlsx
